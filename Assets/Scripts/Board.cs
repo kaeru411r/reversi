@@ -18,6 +18,7 @@ public class Board : MonoBehaviour, IPointerClickHandler
     Cell[,] _board;
     /// <summary>グリッドレイアウトグループ</summary>
     GridLayoutGroup _group;
+    bool[,] _availableCells;
 
 
     // Start is called before the first frame update
@@ -29,7 +30,7 @@ public class Board : MonoBehaviour, IPointerClickHandler
         _group.startAxis = GridLayoutGroup.Axis.Horizontal;
         _group.childAlignment = TextAnchor.MiddleCenter;
         SetUp();
-        AvailableCellsSearch(_turn);
+        Highlight();
     }
 
     static public Cell[,] BoardSetUp(int capaciousness, Cell prefab)
@@ -83,10 +84,6 @@ public class Board : MonoBehaviour, IPointerClickHandler
             for (int k = 0; k < _board.GetLength(0); k++)
             {
                 cells[i, k] = AvailableCheck(k, i, stone);
-                if (cells[i, k])
-                {
-                    _board[i, k].State = CellState.Highlight;
-                }
             }
         }
         return cells;
@@ -116,7 +113,7 @@ public class Board : MonoBehaviour, IPointerClickHandler
             {
                 return true;
             }
-            if (ConcolorSearchVec(row , col, new Vector2Int(-1, 0), stone) > 1)
+            if (ConcolorSearchVec(row, col, new Vector2Int(-1, 0), stone) > 1)
             {
                 return true;
             }
@@ -160,6 +157,27 @@ public class Board : MonoBehaviour, IPointerClickHandler
         }
         return length;
     }
+
+    void Highlight()
+    {
+        _availableCells = AvailableCellsSearch(_turn);
+        for (int i = 0; i < _board.GetLength(0); i++)
+        {
+            for (int k = 0; k < _board.GetLength(1); k++)
+            {
+                if (_availableCells[i, k])
+                {
+                    _board[i, k].State = CellState.Highlight;
+                }
+                else
+                {
+                    _board[i, k].State = CellState.Nomal;
+                }
+
+            }
+        }
+    }
+
 
     Cell GetCell(int row, int col)
     {
@@ -226,7 +244,7 @@ public class Board : MonoBehaviour, IPointerClickHandler
             {
                 for (int k = 0; k < _board.GetLength(1); k++)
                 {
-                    if (cell == _board[i, k])
+                    if (cell == _board[i, k] && _availableCells[i, k])
                     {
                         Place(k, i);
                     }

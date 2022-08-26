@@ -468,7 +468,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _cellPrefab: {fileID: 1705367886486431152, guid: e4b3f96d7665fd6449e25bf7ea52c5ce, type: 3}
   _capaciousness: 4
-  _turn: 2
+  _turn: 1
 --- !u!114 &1323317566
 MonoBehaviour:
   m_ObjectHideFlags: 0
