@@ -7,39 +7,45 @@ using UnityEngine.UI;
 public class Cell : MonoBehaviour
 {
     [Tooltip("セルの状態")]
-    [SerializeField] CellState _state = CellState.Blank;
+    [SerializeField] CellStone _stone = CellStone.Blank;
+    [Tooltip("セルの状態")]
+    [SerializeField] CellState _state = CellState.Nomal;
     [Tooltip("ボードの色")]
     [SerializeField] Color _boardColor = new Color(0, 115, 74);
     [Tooltip("プレイヤー1の石の色")]
     [SerializeField] Color _player1Color = Color.black;
     [Tooltip("プレイヤー2の石の色")]
     [SerializeField] Color _player2Color = Color.white;
+    [Tooltip("ハイライトされているときにかかるマスク")]
+    [SerializeField] Color _highlightMaskColor = new Color(50, 50, 50);
 
     Image _image;
 
     private void Awake()
     {
         SetUp();
-        Debug.Log("Awake");
     }
 
     private void OnValidate()
     {
-        Debug.Log("OnValidate");
         Transcription();
     }
 
     // Start is called before the first frame update
     void Start()
     {
-        Debug.Log("Start");
     }
 
 
     public void SetUp()
     {
         _image = GetComponent<Image>();
-        Debug.Log("SetUp");
+    }
+
+    public void ChangeState(CellStone state)
+    {
+        _stone = state;
+        Transcription();
     }
 
     void Transcription()
@@ -48,21 +54,24 @@ public class Cell : MonoBehaviour
         {
             SetUp();
         }
-        switch (_state)
+        switch (_stone)
         {
-            case CellState.Blank:
+            case CellStone.Blank:
                 _image.color = _boardColor;
                 break;
-            case CellState.Player1:
+            case CellStone.Player1:
                 _image.color = _player1Color;
                 break;
-            case CellState.Player2:
+            case CellStone.Player2:
                 _image.color = _player2Color;
                 break;
             default:
                 break;
         }
-        Debug.Log("Transcription");
+        if(_state == CellState.Highlight)
+        {
+            _image.color += _highlightMaskColor;
+        }
     }
 }
 
@@ -70,7 +79,7 @@ public class Cell : MonoBehaviour
 /// <summary>
 /// セルの状態
 /// </summary>
-public enum CellState
+public enum CellStone
 {
     /// <summary>空き</summary>
     Blank = 0,
@@ -78,4 +87,10 @@ public enum CellState
     Player1 = 1,
     /// <summary>プレイヤー2</summary>
     Player2 = 2,
+}
+
+public enum CellState
+{
+    Nomal,
+    Highlight,
 }
