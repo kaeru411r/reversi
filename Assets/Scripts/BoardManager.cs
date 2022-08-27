@@ -1,18 +1,18 @@
 using System.Collections;
 using System.Collections.Generic;
+using System;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 
 [RequireComponent(typeof(GridLayoutGroup), typeof(RectTransform))]
-public class Board : MonoBehaviour, IPointerClickHandler
+public class BoardManager : MonoBehaviour
 {
     [Tooltip("セルのプレハブ")]
     [SerializeField] Cell _cellPrefab;
     [Tooltip("ボード半面の長さ")]
     [SerializeField] int _capaciousness = 4;
-    [Tooltip("ターンプレイヤー")]
-    [SerializeField] Stone _turn = Stone.Player1;
 
     /// <summary>盤面</summary>
     Cell[,] _board;
@@ -20,9 +20,19 @@ public class Board : MonoBehaviour, IPointerClickHandler
     GridLayoutGroup _group;
     /// <summary>レクトトランスフォーム</summary>
     RectTransform _rect;
-    /// <summary>配置可能なセル</summary>
-    bool[,] _availableCells;
 
+    public Cell[,] Board
+    {
+        get
+        {
+            if (_board == null)
+            {
+                Debug.LogError($"{nameof(SetUp)}を呼び出し、盤面のセットアップを行ってください");
+                _board = new Cell[0, 0];
+            }
+            return _board;
+        }
+    }
 
     private void Awake()
     {
@@ -37,8 +47,6 @@ public class Board : MonoBehaviour, IPointerClickHandler
     // Start is called before the first frame update
     void Start()
     {
-        SetUp();
-        Highlight();
     }
 
     static public Cell[,] BoardCreate(int capaciousness, Cell prefab)
@@ -65,33 +73,33 @@ public class Board : MonoBehaviour, IPointerClickHandler
             Debug.LogError($"{nameof(_cellPrefab)}がnullです");
             return;
         }
-        _group.constraintCount = _capaciousness * 2;
-        float size = Mathf.Min(_rect.rect.width / (_capaciousness * 2), _rect.rect.height / (_capaciousness * 2));
-        _group.cellSize = new Vector2(size, size);
         _board = BoardCreate(_capaciousness, _cellPrefab);
-        for (int i = 0; i < _board.GetLength(0); i++)
+        _group.constraintCount = _board.GetLength(0);
+        float size = Mathf.Min(_rect.rect.width / _board.GetLength(1), _rect.rect.height / _board.GetLength(0));
+        _group.cellSize = new Vector2(size, size);
+        for (int i = 0; i < Board.GetLength(0); i++)
         {
-            for (int k = 0; k < _board.GetLength(1); k++)
+            for (int k = 0; k < Board.GetLength(1); k++)
             {
-                _board[i, k].transform.SetParent(transform);
+                Board[i, k].transform.SetParent(transform);
                 if (k == _capaciousness - 1 && i == _capaciousness - 1 || k == _capaciousness && i == _capaciousness)
                 {
-                    _board[i, k].Stone = Stone.Player2;
+                    Board[i, k].Stone = Stone.Player2;
                 }
                 else if (k == _capaciousness && i == _capaciousness - 1 || k == _capaciousness - 1 && i == _capaciousness)
                 {
-                    _board[i, k].Stone = Stone.Player1;
+                    Board[i, k].Stone = Stone.Player1;
                 }
             }
         }
     }
 
-    bool[,] AvailableCellsSearch(Stone stone)
+    public bool[,] AvailableCellsSearch(Stone stone)
     {
-        bool[,] cells = new bool[_board.GetLength(0), _board.GetLength(1)];
-        for (int i = 0; i < _board.GetLength(0); i++)
+        bool[,] cells = new bool[Board.GetLength(0), Board.GetLength(1)];
+        for (int i = 0; i < Board.GetLength(0); i++)
         {
-            for (int k = 0; k < _board.GetLength(0); k++)
+            for (int k = 0; k < Board.GetLength(0); k++)
             {
                 cells[i, k] = AvailableCheck(k, i, stone);
             }
@@ -99,6 +107,13 @@ public class Board : MonoBehaviour, IPointerClickHandler
         return cells;
     }
 
+    /// <summary>
+    /// (col, row)のセルにstoneの石を置けるか
+    /// </summary>
+    /// <param name="row"></param>
+    /// <param name="col"></param>
+    /// <param name="stone"></param>
+    /// <returns></returns>
     bool AvailableCheck(int row, int col, Stone stone)
     {
         if (EreaChack(row, col))
@@ -168,23 +183,31 @@ public class Board : MonoBehaviour, IPointerClickHandler
         return length;
     }
 
-    void Highlight()
+    public void Highlight(Stone turn)
     {
-        _availableCells = AvailableCellsSearch(_turn);
-        for (int i = 0; i < _board.GetLength(0); i++)
+        bool[,] availableCells = AvailableCellsSearch(turn);
+        for (int i = 0; i < Board.GetLength(0); i++)
         {
-            for (int k = 0; k < _board.GetLength(1); k++)
+            for (int k = 0; k < Board.GetLength(1); k++)
             {
-                if (_availableCells[i, k])
+                if (availableCells[i, k])
                 {
-                    _board[i, k].State = CellState.Highlight;
+                    Board[i, k].State = CellState.Highlight;
                 }
                 else
                 {
-                    _board[i, k].State = CellState.Nomal;
+                    Board[i, k].State = CellState.Nomal;
                 }
 
             }
+        }
+    }
+
+    public void OffHighlight()
+    {
+        foreach (Cell c in _board)
+        {
+            c.State = CellState.Nomal;
         }
     }
 
@@ -194,7 +217,7 @@ public class Board : MonoBehaviour, IPointerClickHandler
         Cell cell = null;
         if (EreaChack(row, col))
         {
-            cell = _board[col, row];
+            cell = Board[col, row];
         }
         return cell;
     }
@@ -219,48 +242,33 @@ public class Board : MonoBehaviour, IPointerClickHandler
         {
             return false;
         }
-        _board[col, row].Stone = Stone.Player1;
+        Board[col, row].Stone = Stone.Player1;
         return true;
     }
 
-    bool EreaChack(int row, int col)
+    public bool Place(Cell cell)
     {
-        if (row >= 0 && col >= 0)
+        for (int i = 0; i < Board.GetLength(0); i++)
         {
-            if (_board.GetLength(0) > col && _board.GetLength(1) > row)
+            for (int k = 0; k < Board.GetLength(1); k++)
             {
-                return true;
+                return Place(k, i);
             }
         }
         return false;
     }
 
-    // Update is called once per frame
-    void Update()
-    {
 
-    }
-    public void OnPointerClick(PointerEventData eventData)
+    bool EreaChack(int row, int col)
     {
-        Debug.Log(eventData.pointerCurrentRaycast.gameObject);
-        Cell cell;
-        if (!eventData.pointerCurrentRaycast.gameObject.TryGetComponent<Cell>(out cell))
+        if (row >= 0 && col >= 0)
         {
-            cell = eventData.pointerCurrentRaycast.gameObject.GetComponentInParent<Cell>();
-        }
-        if (cell)
-        {
-            for (int i = 0; i < _board.GetLength(0); i++)
+            if (Board.GetLength(0) > col && Board.GetLength(1) > row)
             {
-                for (int k = 0; k < _board.GetLength(1); k++)
-                {
-                    if (cell == _board[i, k] && _availableCells[i, k])
-                    {
-                        Place(k, i);
-                    }
-                }
+                return true;
             }
         }
+        return false;
     }
 }
 
