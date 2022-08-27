@@ -18,22 +18,30 @@ public class Board : MonoBehaviour, IPointerClickHandler
     Cell[,] _board;
     /// <summary>グリッドレイアウトグループ</summary>
     GridLayoutGroup _group;
+    /// <summary>レクトトランスフォーム</summary>
+    RectTransform _rect;
+    /// <summary>配置可能なセル</summary>
     bool[,] _availableCells;
 
 
-    // Start is called before the first frame update
-    void Start()
+    private void Awake()
     {
         _group = GetComponent<GridLayoutGroup>();
         _group.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
         _group.startCorner = GridLayoutGroup.Corner.UpperLeft;
         _group.startAxis = GridLayoutGroup.Axis.Horizontal;
         _group.childAlignment = TextAnchor.MiddleCenter;
+        _rect = GetComponent<RectTransform>();
+    }
+
+    // Start is called before the first frame update
+    void Start()
+    {
         SetUp();
         Highlight();
     }
 
-    static public Cell[,] BoardSetUp(int capaciousness, Cell prefab)
+    static public Cell[,] BoardCreate(int capaciousness, Cell prefab)
     {
         Cell[,] board = new Cell[capaciousness * 2, capaciousness * 2];
         for (int i = 0; i < capaciousness * 2; i++)
@@ -52,13 +60,15 @@ public class Board : MonoBehaviour, IPointerClickHandler
     /// </summary>
     public void SetUp()
     {
-        _group.constraintCount = _capaciousness * 2;
         if (!_cellPrefab)
         {
             Debug.LogError($"{nameof(_cellPrefab)}がnullです");
             return;
         }
-        _board = BoardSetUp(_capaciousness, _cellPrefab);
+        _group.constraintCount = _capaciousness * 2;
+        float size = Mathf.Min(_rect.rect.width / (_capaciousness * 2), _rect.rect.height / (_capaciousness * 2));
+        _group.cellSize = new Vector2(size, size);
+        _board = BoardCreate(_capaciousness, _cellPrefab);
         for (int i = 0; i < _board.GetLength(0); i++)
         {
             for (int k = 0; k < _board.GetLength(1); k++)

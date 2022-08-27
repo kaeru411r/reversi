@@ -21,7 +21,8 @@ public class Cell : MonoBehaviour
 
     Image _image;
 
-    public Stone Stone { 
+    public Stone Stone
+    {
         get => _stone;
         set
         {
@@ -29,13 +30,16 @@ public class Cell : MonoBehaviour
             Transcription();
         }
     }
-    public CellState State { 
+    public CellState State
+    {
         get => _state;
-        set{
+        set
+        {
             _state = value;
             Transcription();
         }
     }
+
 
     private void Awake()
     {
@@ -78,7 +82,7 @@ public class Cell : MonoBehaviour
             default:
                 break;
         }
-        if(_state == CellState.Highlight)
+        if (_state == CellState.Highlight)
         {
             _image.color += _highlightMaskColor;
         }
