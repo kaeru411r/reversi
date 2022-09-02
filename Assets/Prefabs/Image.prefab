@@ -89,8 +89,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 25f96a4248dbed34f88d23e0a7b71172, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _stone: 0
-  _state: 0
+  _cellData:
+    Stone: 0
+    State: 0
   _boardColor: {r: 0, g: 0.4509804, b: 0.29411766, a: 1}
   _player1Color: {r: 0, g: 0, b: 0, a: 1}
   _player2Color: {r: 1, g: 1, b: 1, a: 1}

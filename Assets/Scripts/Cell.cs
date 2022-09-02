@@ -7,9 +7,7 @@ using UnityEngine.UI;
 public class Cell : MonoBehaviour
 {
     [Tooltip("セルの状態")]
-    [SerializeField] Stone _stone = Stone.Blank;
-    [Tooltip("セルの状態")]
-    [SerializeField] CellState _state = CellState.Nomal;
+    [SerializeField] CellData _cellData = new CellData(Stone.Blank, CellState.Nomal);
     [Tooltip("ボードの色")]
     [SerializeField] Color _boardColor = new Color(0, 115, 74);
     [Tooltip("プレイヤー1の石の色")]
@@ -23,19 +21,19 @@ public class Cell : MonoBehaviour
 
     public Stone Stone
     {
-        get => _stone;
+        get => _cellData.Stone;
         set
         {
-            _stone = value;
+            _cellData.Stone = value;
             Transcription();
         }
     }
     public CellState State
     {
-        get => _state;
+        get => _cellData.State;
         set
         {
-            _state = value;
+            _cellData.State = value;
             Transcription();
         }
     }
@@ -68,7 +66,7 @@ public class Cell : MonoBehaviour
         {
             SetUp();
         }
-        switch (_stone)
+        switch (_cellData.Stone)
         {
             case Stone.Blank:
                 _image.color = _boardColor;
@@ -82,7 +80,7 @@ public class Cell : MonoBehaviour
             default:
                 break;
         }
-        if (_state == CellState.Highlight)
+        if (_cellData.State == CellState.Highlight)
         {
             _image.color += _highlightMaskColor;
         }

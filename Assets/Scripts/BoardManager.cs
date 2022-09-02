@@ -34,6 +34,14 @@ public class BoardManager : MonoBehaviour
         }
     }
 
+    public bool IsActive
+    {
+        get
+        {
+            return _board != null;
+        }
+    }
+
     private void Awake()
     {
         _group = GetComponent<GridLayoutGroup>();
@@ -94,6 +102,14 @@ public class BoardManager : MonoBehaviour
         }
     }
 
+    public void Delete()
+    {
+        foreach(Cell c in _board)
+        {
+            Destroy(c.gameObject);
+        }
+    }
+
     public bool[,] AvailableCellsSearch(Stone stone)
     {
         bool[,] cells = new bool[Board.GetLength(0), Board.GetLength(1)];
@@ -118,6 +134,13 @@ public class BoardManager : MonoBehaviour
     {
         if (EreaChack(row, col))
         {
+            if (TryGetCell(row, col, out Cell cell))
+            {
+                if (cell.Stone != Stone.Blank)
+                {
+                    return false;
+                }
+            }
             if (ConcolorSearchVec(row, col, new Vector2Int(1, 1), stone) > 1)
             {
                 return true;
@@ -236,26 +259,93 @@ public class BoardManager : MonoBehaviour
         }
     }
 
-    public bool Place(int row, int col)
+    public bool Place(int row, int col, Stone player)
     {
         if (!EreaChack(row, col))
         {
             return false;
         }
-        Board[col, row].Stone = Stone.Player1;
+        Board[col, row].Stone = player;
+        if(ConcolorSearchVec(row, col, new Vector2Int(-1, -1), player) > 1)
+        {
+            Revaers(row, col, new Vector2Int(-1, -1), player);
+        }
+        if (ConcolorSearchVec(row, col, new Vector2Int(0, -1), player) > 1)
+        {
+            Revaers(row, col, new Vector2Int(0, -1), player);
+        }
+        if (ConcolorSearchVec(row, col, new Vector2Int(1, -1), player) > 1)
+        {
+            Revaers(row, col, new Vector2Int(1, -1), player);
+        }
+        if (ConcolorSearchVec(row, col, new Vector2Int(1, 0), player) > 1)
+        {
+            Revaers(row, col, new Vector2Int(1, 0), player);
+        }
+        if (ConcolorSearchVec(row, col, new Vector2Int(1, 1), player) > 1)
+        {
+            Revaers(row, col, new Vector2Int(1, 1), player);
+        }
+        if (ConcolorSearchVec(row, col, new Vector2Int(0, 01), player) > 1)
+        {
+            Revaers(row, col, new Vector2Int(0, 1), player);
+        }
+        if (ConcolorSearchVec(row, col, new Vector2Int(-1, 1), player) > 1)
+        {
+            Revaers(row, col, new Vector2Int(-1, 1), player);
+        }
+        if (ConcolorSearchVec(row, col, new Vector2Int(-1, 0), player) > 1)
+        {
+            Revaers(row, col, new Vector2Int(-1, 0), player);
+        }
         return true;
     }
 
-    public bool Place(Cell cell)
+    public bool Place(Cell cell, Stone player)
     {
         for (int i = 0; i < Board.GetLength(0); i++)
         {
             for (int k = 0; k < Board.GetLength(1); k++)
             {
-                return Place(k, i);
+                return Place(k, i, player);
             }
         }
         return false;
+    }
+
+    int Revaers(int row, int col, Vector2Int vec, Stone player)
+    {
+        if (!EreaChack(row, col))
+        {
+            return -1;
+        }
+        if(TryGetCell(row + vec.x, col + vec.y , out Cell cell))
+        {
+            Stone stone = cell.Stone;
+            if(cell.Stone == player)
+            {
+                return 0;
+            }
+            else if(stone == Stone.Blank)
+            {
+                return -2;
+            }
+            else
+            {
+                cell.Stone = player;
+                int num = Revaers(row + vec.x, col + vec.y, vec, player);
+                if (num >= 0)
+                {
+                    return num + 1;
+                }
+                else
+                {
+                    cell.Stone = stone;
+                    return num;
+                }
+            }
+        }
+        return -1;
     }
 
 
