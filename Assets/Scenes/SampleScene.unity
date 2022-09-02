@@ -239,7 +239,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _board: {fileID: 1323317565}
   _turn: 1
-  _record: a
+  _record: 2, 3, 3, 4, 3, 4
 --- !u!1 &519420028
 GameObject:
   m_ObjectHideFlags: 0

@@ -45,6 +45,7 @@ public class GameManager : MonoBehaviour, IPointerClickHandler
 
     bool RecordReproduction()
     {
+        _turn = Stone.Player1;
         _board.Delete();
         _board.SetUp();
         _record.Replace(' ', '\0');
@@ -56,19 +57,36 @@ public class GameManager : MonoBehaviour, IPointerClickHandler
             {
                 nums.Add(int.Parse(data[i]));
             }
-            catch(FormatException e)
+            catch (FormatException e)
             {
 
             }
         }
-        for(int i = 0; i < nums.Count - 1; i += 2)
+        for (int i = 0; i < nums.Count - 1; i += 2)
         {
-            if(_board.Place(nums[i], nums[i + 1], _turn))
+            try
             {
-                TurnChange();
+                if (_availableCells[nums[i] - 1, nums[i + 1] - 1])
+                {
+                    if (_board.Place(nums[i] - 1, nums[i + 1] - 1, _turn))
+                    {
+                        TurnChange();
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+                else
+                {
+                    Debug.LogWarning("");
+                    return false;
+                }
             }
-            else
+            catch (IndexOutOfRangeException e)
             {
+                //Debug.LogWarning(e.Message);
+                Debug.LogWarning($"”Õ–Ê‚É‘¶Ý‚µ‚È‚¢ƒ}ƒX‚ªŽ¦‚³‚ê‚Ä‚¢‚Ü‚·");
                 return false;
             }
         }
@@ -140,7 +158,7 @@ public class GameManager : MonoBehaviour, IPointerClickHandler
 
     void TurnChange(Stone turn, int number)
     {
-        if(turn == Stone.Blank)
+        if (turn == Stone.Blank)
         {
             turn = Stone.Player1;
         }
