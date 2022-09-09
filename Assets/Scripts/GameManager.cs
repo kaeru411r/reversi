@@ -1,5 +1,6 @@
 using Mono.CompilerServices.SymbolWriter;
 using System;
+using System.Text;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -75,7 +76,8 @@ public class GameManager : MonoBehaviour, IPointerClickHandler
         }
         for (int i = 0; i < nums.Count - 1; i += 2)
         {
-            if (_availableCells[nums[i] - 1, nums[i + 1] - 1])
+            _availableCells = _board.AvailableCellsSearch(_turn);
+            if (_availableCells[nums[i + 1] - 1, nums[i] - 1])
             {
                 if (_board.Place(nums[i] - 1, nums[i + 1] - 1, _turn))
                 {
@@ -90,7 +92,7 @@ public class GameManager : MonoBehaviour, IPointerClickHandler
             else
             {
                 int sum = 0;
-                for (int k = 0; k < (i % 2 != 0 ? i - 1 : i + 1); k++)
+                for (int k = 0; k < i; k++)
                 {
                     sum += nums[k].ToString().Length;
                     if (k != 0)
@@ -147,7 +149,7 @@ public class GameManager : MonoBehaviour, IPointerClickHandler
             else
             {
                 int sum = 0;
-                for (int k = 0; k < (i % 2 != 0 ? i - 1 : i + 1); k++)
+                for (int k = 0; k < (i % 2 != 0 ? i - 1 : i); k++)
                 {
                     sum += data[k].Length;
                     if(k != 0)
