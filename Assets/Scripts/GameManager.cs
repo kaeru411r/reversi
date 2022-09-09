@@ -23,6 +23,9 @@ public class GameManager : MonoBehaviour, IPointerClickHandler
     // Start is called before the first frame update
     void Start()
     {
+        _board.SetUp();
+        _board.Highlight(_turn);
+        _availableCells = _board.AvailableCellsSearch(_turn);
         RecordReproduction();
         //_board.OffHighlight();
     }
@@ -31,6 +34,12 @@ public class GameManager : MonoBehaviour, IPointerClickHandler
 #if UNITY_EDITOR
     private void OnValidate()
     {
+        UnityEditor.EditorApplication.delayCall += _OnValidate;
+    }
+
+    private void _OnValidate()
+    {
+        UnityEditor.EditorApplication.delayCall -= _OnValidate;
         if (UnityEditor.EditorApplication.isPlaying)
         {
             if (_board.IsActive)
@@ -45,46 +54,32 @@ public class GameManager : MonoBehaviour, IPointerClickHandler
 
     bool RecordReproduction()
     {
+        if(_record.Length == 0)
+        {
+            return false;
+        }
         _turn = Stone.Player1;
         _board.Delete();
         _board.SetUp();
-        _record.Replace(' ', '\0');
-        if (_record.Length == 0)
+        _availableCells = _board.AvailableCellsSearch(_turn);
+        BadValueCatch();
+        string[] data = _record.Split(',');
+        if(data.Length < 2)
         {
             return Return(false);
-        }
-        string[] data = _record.Split(',');
-        if (data.Length != 0 && data.Length % 2 != 0)
-        {
-            Debug.Log(data.Length);
-            _record = _record.Remove(_record.Length - 1 - data.LastOrDefault().Length);
         }
         List<int> nums = new List<int>();
         for (int i = 0; i < data.Length; i++)
         {
-            if (int.TryParse(data[i], out int num))
-            {
-                nums.Add(num);
-            }
-            else
-            {
-                _record = _record.Replace("," + data[i], "");
-            }
+            nums.Add(int.Parse(data[i]));
         }
         for (int i = 0; i < nums.Count - 1; i += 2)
         {
-            if (nums[i] >= 0 && nums[i] < _availableCells.GetLength(0) && nums[i + 1] >= 0 && nums[i + 1] < _availableCells.GetLength(1))
+            if (_availableCells[nums[i] - 1, nums[i + 1] - 1])
             {
-                if (_availableCells[nums[i] - 1, nums[i + 1] - 1])
+                if (_board.Place(nums[i] - 1, nums[i + 1] - 1, _turn))
                 {
-                    if (_board.Place(nums[i] - 1, nums[i + 1] - 1, _turn))
-                    {
-                        TurnChange();
-                    }
-                    else
-                    {
-                        return Return(false);
-                    }
+                    TurnChange();
                 }
                 else
                 {
@@ -94,9 +89,17 @@ public class GameManager : MonoBehaviour, IPointerClickHandler
             }
             else
             {
-                //Debug.LogWarning(e.Message);
-                Debug.LogWarning($"”Õ–Ê‚É‘¶Ý‚µ‚È‚¢ƒ}ƒX‚ªŽ¦‚³‚ê‚Ä‚¢‚Ü‚·");
-                return false;
+                int sum = 0;
+                for (int k = 0; k < (i % 2 != 0 ? i - 1 : i + 1); k++)
+                {
+                    sum += nums[k].ToString().Length;
+                    if (k != 0)
+                    {
+                        sum++;
+                    }
+                }
+                _record = _record.Remove(sum);
+                return Return(false);
             }
         }
         return Return(true);
@@ -109,6 +112,71 @@ public class GameManager : MonoBehaviour, IPointerClickHandler
             return tf;
         }
 
+    }
+
+    void BadValueCatch()
+    {
+        if (_record.Length == 0)
+        {
+            return;
+        }
+        _record.Replace(' ', '\0');
+        string[] data = _record.Split(',');
+        if (data.Length != 0 && data.Length % 2 != 0)
+        {
+            int a;
+            if(data.Length == 1)
+            {
+                a = 0;
+            }
+            else
+            {
+                a = 1;
+            }
+            _record = _record.Remove(_record.Length - a - data.LastOrDefault().Length);
+            BadValueCatch();
+            return;
+        }
+        List<int> nums = new List<int>();
+        for (int i = 0; i < data.Length; i++)
+        {
+            if (int.TryParse(data[i], out int num))
+            {
+                nums.Add(num);
+            }
+            else
+            {
+                int sum = 0;
+                for (int k = 0; k < (i % 2 != 0 ? i - 1 : i + 1); k++)
+                {
+                    sum += data[k].Length;
+                    if(k != 0)
+                    {
+                        sum++;
+                    }
+                }
+                _record = _record.Remove(sum);
+                BadValueCatch();
+                return;
+            }
+        }
+        for (int i = 0; i < nums.Count - 1; i += 2)
+        {
+            if (!(nums[i] >= 0 && nums[i] < _availableCells.GetLength(0) && nums[i + 1] >= 0 && nums[i + 1] < _availableCells.GetLength(1)))
+            {
+                if (i == 0)
+                {
+                    _record = _record.Replace(nums[i].ToString(), "");
+                }
+                else
+                {
+                    _record = _record.Replace("," + nums[i].ToString(), "");
+                }
+                _record = _record.Replace("," + nums[i + 1].ToString(), "");
+                BadValueCatch();
+                return;
+            }
+        }
     }
 
 
