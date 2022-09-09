@@ -44,10 +44,12 @@ public class Cell : MonoBehaviour
         SetUp();
     }
 
+#if UNITY_EDITOR
     private void OnValidate()
     {
         Transcription();
     }
+#endif
 
     // Start is called before the first frame update
     void Start()

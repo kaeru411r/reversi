@@ -1,6 +1,8 @@
+using Mono.CompilerServices.SymbolWriter;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
@@ -21,9 +23,7 @@ public class GameManager : MonoBehaviour, IPointerClickHandler
     // Start is called before the first frame update
     void Start()
     {
-        _board.SetUp();
-        _board.Highlight(_turn);
-        _availableCells = _board.AvailableCellsSearch(_turn);
+        RecordReproduction();
         //_board.OffHighlight();
     }
 
@@ -49,22 +49,31 @@ public class GameManager : MonoBehaviour, IPointerClickHandler
         _board.Delete();
         _board.SetUp();
         _record.Replace(' ', '\0');
+        if (_record.Length == 0)
+        {
+            return Return(false);
+        }
         string[] data = _record.Split(',');
+        if (data.Length != 0 && data.Length % 2 != 0)
+        {
+            Debug.Log(data.Length);
+            _record = _record.Remove(_record.Length - 1 - data.LastOrDefault().Length);
+        }
         List<int> nums = new List<int>();
         for (int i = 0; i < data.Length; i++)
         {
-            try
+            if (int.TryParse(data[i], out int num))
             {
-                nums.Add(int.Parse(data[i]));
+                nums.Add(num);
             }
-            catch (FormatException e)
+            else
             {
-
+                _record = _record.Replace("," + data[i], "");
             }
         }
         for (int i = 0; i < nums.Count - 1; i += 2)
         {
-            try
+            if (nums[i] >= 0 && nums[i] < _availableCells.GetLength(0) && nums[i + 1] >= 0 && nums[i + 1] < _availableCells.GetLength(1))
             {
                 if (_availableCells[nums[i] - 1, nums[i + 1] - 1])
                 {
@@ -74,23 +83,32 @@ public class GameManager : MonoBehaviour, IPointerClickHandler
                     }
                     else
                     {
-                        return false;
+                        return Return(false);
                     }
                 }
                 else
                 {
                     Debug.LogWarning("");
-                    return false;
+                    return Return(false);
                 }
             }
-            catch (IndexOutOfRangeException e)
+            else
             {
                 //Debug.LogWarning(e.Message);
                 Debug.LogWarning($"”Õ–Ê‚É‘¶Ý‚µ‚È‚¢ƒ}ƒX‚ªŽ¦‚³‚ê‚Ä‚¢‚Ü‚·");
                 return false;
             }
         }
-        return true;
+        return Return(true);
+
+        bool Return(bool tf)
+        {
+            _board.Highlight(_turn);
+            _availableCells = _board.AvailableCellsSearch(_turn);
+
+            return tf;
+        }
+
     }
 
 

@@ -104,9 +104,12 @@ public class BoardManager : MonoBehaviour
 
     public void Delete()
     {
-        foreach(Cell c in _board)
+        if (_board != null)
         {
-            Destroy(c.gameObject);
+            foreach (Cell c in _board)
+            {
+                Destroy(c.gameObject);
+            }
         }
     }
 
@@ -250,6 +253,7 @@ public class BoardManager : MonoBehaviour
         return cell;
     }
 
+#if UNITY_EDITOR
     private void OnValidate()
     {
         if (_capaciousness <= 0)
@@ -258,6 +262,7 @@ public class BoardManager : MonoBehaviour
             Debug.LogWarning($"{nameof(_capaciousness)}‚Í0ˆÈ‰º‚ÉÝ’è‚·‚é‚±‚Æ‚Ío—ˆ‚Ü‚¹‚ñ");
         }
     }
+#endif
 
     public bool Place(int row, int col, Stone player)
     {
